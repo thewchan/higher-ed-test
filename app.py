@@ -1,4 +1,6 @@
 """Test app for higher ed donation visualization."""
+from collections import namedtuple
+
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
@@ -64,10 +66,30 @@ overall_donations = {school: donations
                          .order_by(sql.desc('Amount'))
                      )}
 
+school_donations_by_date = [
+    namedtuple(
+        'donations_by_date',
+        ['school', 'date', 'donation', 'country']
+    )(school, date, donation, country)
+    for school, date, donation, country
+    in session.query(
+        DonationData.Institution_name,
+        DonationData.Foreign_Gift_Received_Date,
+        DonationData.Foreign_Gift_Amount,
+        DonationData.Country_of_Giftor,
+    ).filter(
+        DonationData.Institution_name == 'Stanford University'
+    )
+]
+
 df = pd.DataFrame(
     overall_donations.items(),
     columns=['School', 'Amount of Foreign Donations Received']
 )
+
+df2 = pd.DataFrame(school_donations_by_date)
+df2['date'] = pd.to_datetime(df2['date'])
+df2 = df2.sort_values('date')
 
 fig = px.bar(
     df,
@@ -77,6 +99,18 @@ fig = px.bar(
 )
 fig.update_yaxes(title_text='')
 fig.update_xaxes(tickprefix='$')
+
+fig2 = px.scatter(
+    df2,
+    x='date',
+    y='donation',
+    hover_data=['country']
+)
+fig2.update_xaxes(title_text='')
+fig2.update_yaxes(
+    title_text='',
+    tickprefix="$"
+)
 
 app.layout = html.Div(children=[
     html.Div(
@@ -90,7 +124,7 @@ app.layout = html.Div(children=[
             html.Div(
                 children=dcc.Graph(
                     id='example-graph2',
-                    figure=fig
+                    figure=fig2
                 ),
                 className='one-half column'
             ),
