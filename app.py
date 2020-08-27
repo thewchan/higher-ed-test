@@ -18,6 +18,7 @@ Base = declarative_base()
 
 class DonationData(Base):
     """Class for the donation data table."""
+
     __tablename__ = 'donation_data'
 
     Index = sql.Column(sql.Integer, primary_key=True)
@@ -51,46 +52,68 @@ engine = sql.create_engine('sqlite:///merged_data_w_coord.sqlite')
 session_gen = sql.orm.sessionmaker(bind=engine)
 session = session_gen()
 
-# top10_by_counts = (
-#     donations_df.groupby('Institution Name')
-#     .count()
-#     .iloc[:, 0]
-#     .sort_values(ascending=True)
-#     .iloc[-10:])
 
-data = {school: donations
-        for school, donations in
-        (session.query(
-            DonationData.Institution_name,
-            func.sum(DonationData.Foreign_Gift_Amount).label('Amount'))
-         .group_by(DonationData.Institution_name)
-         .order_by(sql.desc('Amount'))
-         )[:10]
-        }
+overall_donations = {school: donations
+                     for school, donations in
+                     (session.query(
+                         DonationData.Institution_name,
+                         func.sum(
+                             DonationData.Foreign_Gift_Amount).label('Amount')
+                     )
+                         .group_by(DonationData.Institution_name)
+                         .order_by(sql.desc('Amount'))
+                     )}
 
 df = pd.DataFrame(
-    data.items(),
-    columns=['School', 'Amount']
+    overall_donations.items(),
+    columns=['School', 'Amount of Foreign Donations Received']
 )
 
 fig = px.bar(
     df,
-    x="School",
-    y="Amount",
+    x="Amount of Foreign Donations Received",
+    y="School",
+    orientation='h',
 )
+fig.update_yaxes(title_text='')
+fig.update_xaxes(tickprefix='$')
 
 app.layout = html.Div(children=[
-    html.H1(children='School Donations Test App'),
-
-    html.Div(children='''
-        Dash: A web application framework for Python.
-    '''),
-
-    dcc.Graph(
-        id='example-graph',
-        figure=fig
+    html.Div(
+        children=html.H1(
+            children='School Donations Test App'
+        ),
+        className='row'
+    ),
+    html.Div(
+        children=[
+            html.Div(
+                children=dcc.Graph(
+                    id='example-graph2',
+                    figure=fig
+                ),
+                className='one-half column'
+            ),
+            html.Div(
+                children=dcc.Graph(
+                    id='example-graph3',
+                    figure=fig
+                ),
+                className='one-half column'
+            )
+        ],
+        className='row'
+    ),
+    html.Div(
+        children=dcc.Graph(
+            id='example-graph',
+            figure=fig,
+        ),
+        className='row'
     )
-])
+]
+)
+
 
 if __name__ == '__main__':
     app.run_server(debug=True)
