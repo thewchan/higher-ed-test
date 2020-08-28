@@ -12,11 +12,12 @@ def get_donation_bar(data):
     )
     fig.update_yaxes(title_text='')
     fig.update_xaxes(tickprefix='$')
+    fig.update_layout(clickmode='event+select')
 
     return fig
 
 
-def get_donationTS_scatter(data):
+def get_donationTS_scatter(data, school):
     """Return scatter plot of the donation time series."""
     fig = px.scatter(
         data,
@@ -24,7 +25,8 @@ def get_donationTS_scatter(data):
         y='Amount',
         custom_data=['Donor Country', 'Donor'],
         color_discrete_sequence=px.colors.qualitative.Alphabet,
-        color='Donor Country'
+        color='Donor Country',
+        title=school
     )
     fig.update_xaxes(title_text='')
     fig.update_yaxes(
@@ -41,7 +43,7 @@ def get_donationTS_scatter(data):
     return fig
 
 
-def get_donation_map(data):
+def get_donation_map(data, school):
     """Return donation map."""
     fig = px.scatter_mapbox(
         data,
