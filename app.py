@@ -3,6 +3,7 @@ import json
 import re
 
 import dash
+import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
 import pandas as pd
@@ -13,8 +14,8 @@ from gen_figures import (get_donation_bar, get_donation_map,
                          get_donationTS_scatter)
 
 # Global scope variables
-external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
-app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+# external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.COSMO])
 server = app.server
 db_path = 'sqlite:///merged_data_w_coord.sqlite'
 
@@ -35,69 +36,108 @@ donation_map = get_donation_map(donation_map_df,
                                 'Carnegie Melon University')
 
 # Dashboard layout
-app.layout = html.Div(children=[
-    html.Div(
-        children=html.H1(
-            children='School Donations Test App'
-        ),
-        className='row'
-    ),
-    html.Div(
-        children=[
-            html.Div(
-                children=dcc.Graph(
-                    id='donationTS',
-                    figure=donationTS_scatter
-                ),
-                className='one-half column'
+app.layout = html.Div(
+    children=[
+        html.Div(
+            dbc.Navbar(
+                [
+                    html.A(
+                        dbc.Row(
+                            dbc.Col(
+                                dbc.NavbarBrand(
+                                    'Foreign Donations to US Universities',
+                                    className='ml-2'
+                                )
+                            ),
+                            align='center',
+                            no_gutters=True,
+                        ),
+                        href='#',
+                    ),
+                    dbc.NavbarToggler(id='navbar-toggler'),
+                    dbc.Collapse(
+                        dbc.Row(
+                            [
+                                dbc.Col(
+                                    dcc.Dropdown(
+                                        id='school-dropdown',
+                                        options=[{'label': school,
+                                                  'value': abbrev}
+                                                 for school, abbrev
+                                                 in school_abbrev
+                                                 .set_index('School')
+                                                 .sort_index()['Abbrev']
+                                                 .items()],
+                                        value='cmu',
+                                        style={'width': '30em'}
+                                    ),
+                                    width={'offset': 11}
+                                ),
+                                dbc.Col(
+                                    dbc.NavLink(
+                                        "About",
+                                        href="#",
+                                        className='ml-2'
+                                    ),
+                                    width={'offset': 12}
+                                ),
+                            ],
+                            no_gutters=True,
+                            className='ml-auto, flex-nowrap mt-3 mt-md-0',
+                            align='center',
+                        ),
+                        id='navbar-collapse',
+                        navbar=True,
+                    ),
+                ],
+                className='navbar navbar-expand-lg navbar-light bg-light',
             ),
-            html.Div(
-                children=dcc.Graph(
-                    id='donation-map',
-                    figure=donation_map,
-                    clickData={
-                        'points': [{'y': 'Carnegie Mellon University'}]
-                    }
-                ),
-                className='one-half column'
-            )
-        ],
-        className='row'
-    ),
-    html.Div(
-        children=dcc.Dropdown(
-            id='school-dropdown',
-            options=[
-                {'label': school, 'value': abbrev}
-                for school, abbrev
-                in school_abbrev
-                .set_index('School')
-                .sort_index()['Abbrev'].items()
-            ],
-            value='cmu'
-        )
-    ),
-    html.Div(
-        children=dcc.Graph(
-            id='master-bar-graph',
-            figure=donation_bar,
-            clickData={'points': [{'y': 'Carnegie Mellon University'}]},
         ),
-        className='row',
-    ),
-    html.Div(
-        children=html.Pre(
-            id='debug',
-            style={
-                'border': 'thin lightgrey solid',
-                'overflowX': 'scroll'
-            }
+        html.Div(
+            children=[
+                html.Div(
+                    dcc.Graph(
+                        id='donation-map',
+                        figure=donation_map,
+                        clickData={
+                            'points': [{'y': 'Carnegie Mellon University'}]
+                        }
+                    ),
+                    className='one-half column'
+                ),
+                html.Div(
+                    dcc.Graph(
+                        id='donationTS',
+                        figure=donationTS_scatter
+                    ),
+                    className='one-half column'
+                ),
+            ],
+            className='row'
+        ),
+        html.Div(
+            dcc.Graph(
+                id='master-bar-graph',
+                figure=donation_bar,
+                clickData={'points': [{'y': 'Carnegie Mellon University'}]},
+                selectedData={'points': [{'y': 'Carnegie Mellon University'}]},
+            ),
+            # className='row',
+        ),
+        html.Div(
+            html.Pre(
+                id='debug',
+                style={
+                    'border': 'thin lightgrey solid',
+                    'overflowX': 'scroll'
+                }
+            )
         )
-    )
-])
+    ]
+)
 
 
-@app.callback(
+@ app.callback(
     [
         Output('donation-map', 'figure'),
         Output('donationTS', 'figure'),
@@ -116,7 +156,7 @@ def update_upper_figures(clickData):
     return figure_map, figureTS
 
 
-@app.callback(
+@ app.callback(
     [
         Output('master-bar-graph', 'figure'),
         Output('master-bar-graph', 'clickData'),
@@ -134,15 +174,14 @@ def drop_down_callbacks(value):
     return fig, clickData
 
 
-@app.callback(
-    # Output('school-dropdown', 'value'),
-    Output('debug', 'children'),
-    [Input('master-bar-graph', 'clickData')]
+@ app.callback(
+    Output('school-dropdown', 'value'),
+    [Input('master-bar-graph', 'selectedData')]
 )
-def update_dropdown(clickData):
+def update_dropdown(selectedData):
     school_re = re.compile(r'[^\"]')
     school = ''.join(
-        school_re.findall(json.dumps(clickData['points'][0]['y']))
+        school_re.findall(json.dumps(selectedData['points'][0]['y']))
     )
     value = (school_abbrev[school_abbrev['School'] == school]['Abbrev']
              .values[0])

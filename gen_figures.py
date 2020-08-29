@@ -32,7 +32,7 @@ def get_donationTS_scatter(data, school):
         custom_data=['Donor Country', 'Donor'],
         color_discrete_sequence=px.colors.qualitative.Alphabet,
         color='Donor Country',
-        title=school
+        # title=school,
     )
     fig.update_xaxes(title_text='')
     fig.update_yaxes(
