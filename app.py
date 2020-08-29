@@ -70,7 +70,9 @@ app.layout = html.Div(children=[
             options=[
                 {'label': school, 'value': abbrev}
                 for school, abbrev
-                in school_abbrev.set_index('School')['Abbrev'].items()
+                in school_abbrev
+                .set_index('School')
+                .sort_index()['Abbrev'].items()
             ],
             value='cmu'
         )
@@ -96,65 +98,64 @@ app.layout = html.Div(children=[
 
 
 @app.callback(
-    Output('donationTS', 'figure'),
+    [
+        Output('donation-map', 'figure'),
+        Output('donationTS', 'figure'),
+    ],
     [Input('master-bar-graph', 'clickData')]
 )
-def update_donationTS_scatter(clickData):
-    school_re = re.compile(r'[^\"]')
-    school = ''.join(
-        school_re.findall(json.dumps(clickData['points'][0]['y']))
-    )
-    new_donationTS_df = get_donationsTS_df(db_path, school)
-    figure = get_donationTS_scatter(new_donationTS_df, school)
-    return figure
-
-
-@app.callback(
-    Output('donation-map', 'figure'),
-    [Input('master-bar-graph', 'clickData')]
-)
-def update_donation_map(clickData):
+def update_upper_figures(clickData):
     school_re = re.compile(r'[^\"]')
     school = ''.join(
         school_re.findall(json.dumps(clickData['points'][0]['y']))
     )
     new_donationsMap_df = get_donationsMAP_df(db_path, school)
-    figure = get_donation_map(new_donationsMap_df, school)
-    return figure
+    new_donationTS_df = get_donationsTS_df(db_path, school)
+    figureTS = get_donationTS_scatter(new_donationTS_df, school)
+    figure_map = get_donation_map(new_donationsMap_df, school)
+    return figure_map, figureTS
 
 
 @app.callback(
-    Output('master-bar-graph', 'clickData'),
+    [
+        Output('master-bar-graph', 'figure'),
+        Output('master-bar-graph', 'clickData'),
+    ],
     [Input('school-dropdown', 'value')]
 )
-def update_clickData_master(value):
+def drop_down_callbacks(value):
     school = (school_abbrev[school_abbrev['Abbrev'] == value]
               ['School'].values[0])
     clickData = {'points': [{'y': school}]}
-
-    return clickData
-
-
-@app.callback(
-    Output('master-bar-graph', 'figure'),
-    [Input('school-dropdown', 'value')]
-)
-def update_donation_bar(value):
-    school = (school_abbrev[school_abbrev['Abbrev'] == value]
-              ['School'].values[0])
     df = get_donations_df(db_path)
     school_idx = df[df['School'] == school].index[0]
     fig = get_donation_bar(df, school_idx)
 
-    return fig
+    return fig, clickData
 
 
 @app.callback(
+    # Output('school-dropdown', 'value'),
     Output('debug', 'children'),
-    [Input('master-bar-graph', 'selectedData')]
+    [Input('master-bar-graph', 'clickData')]
 )
-def selected_data_debug(selectedData):
-    return json.dumps(selectedData)
+def update_dropdown(clickData):
+    school_re = re.compile(r'[^\"]')
+    school = ''.join(
+        school_re.findall(json.dumps(clickData['points'][0]['y']))
+    )
+    value = (school_abbrev[school_abbrev['School'] == school]['Abbrev']
+             .values[0])
+
+    return value
+
+
+# @app.callback(
+#     Output('debug', 'children'),
+#     [Input('master-bar-graph', 'selectedData')]
+# )
+# def selected_data_debug(selectedData):
+#     return json.dumps(selectedData)
 
 
 if __name__ == '__main__':
