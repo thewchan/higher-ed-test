@@ -80,7 +80,6 @@ app.layout = html.Div(children=[
             id='master-bar-graph',
             figure=donation_bar,
             clickData={'points': [{'y': 'Carnegie Mellon University'}]},
-            selectedData=None,
         ),
         className='row',
     ),
@@ -137,15 +136,17 @@ def update_clickData_master(value):
 
 
 @app.callback(
-    Output('master-bar-graph', 'selectedData'),
+    Output('master-bar-graph', 'figure'),
     [Input('school-dropdown', 'value')]
 )
-def update_selectedData_master(value):
+def update_donation_bar(value):
     school = (school_abbrev[school_abbrev['Abbrev'] == value]
               ['School'].values[0])
-    selectedData = {'points': [{'y': school}]}
+    df = get_donations_df(db_path)
+    school_idx = df[df['School'] == school].index[0]
+    fig = get_donation_bar(df, school_idx)
 
-    return selectedData
+    return fig
 
 
 @app.callback(

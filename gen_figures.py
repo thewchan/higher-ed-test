@@ -2,7 +2,7 @@
 import plotly.express as px
 
 
-def get_donation_bar(data):
+def get_donation_bar(data, highlighted_bar=0):
     """Return the master horizontal bar graph."""
     fig = px.bar(
         data,
@@ -13,6 +13,12 @@ def get_donation_bar(data):
     fig.update_yaxes(title_text='')
     fig.update_xaxes(tickprefix='$')
     fig.update_layout(clickmode='event+select')
+    fig.update_traces({
+        'selected': {'marker': {'opacity': 1.0}},
+        'unselected': {'marker': {'opacity': 0.5}},
+        'selectedpoints': [highlighted_bar]
+    }
+    )
 
     return fig
 
