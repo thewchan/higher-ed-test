@@ -31,9 +31,11 @@ donationTS_df = get_donationsTS_df(db_path, 'Carnegie Mellon University')
 donation_map_df = get_donationsMAP_df(db_path, 'Carnegie Mellon University')
 donation_bar = get_donation_bar(overall_donations_df)
 donationTS_scatter = get_donationTS_scatter(donationTS_df,
-                                            'Carnegie Mellon University')
+                                            'Carnegie Mellon University',
+                                            'cmu')
 donation_map = get_donation_map(donation_map_df,
-                                'Carnegie Melon University')
+                                'Carnegie Melon University',
+                                )
 
 # Dashboard layout
 app.layout = html.Div(
@@ -173,9 +175,11 @@ def update_upper_figures(clickData):
     school = ''.join(
         school_re.findall(json.dumps(clickData['points'][0]['y']))
     )
+    abbrev = school_abbrev.query(f'School == "{school}"')['Abbrev'].values[0]
+
     new_donationsMap_df = get_donationsMAP_df(db_path, school)
     new_donationTS_df = get_donationsTS_df(db_path, school)
-    figureTS = get_donationTS_scatter(new_donationTS_df, school)
+    figureTS = get_donationTS_scatter(new_donationTS_df, school, abbrev)
     figure_map = get_donation_map(new_donationsMap_df, school)
     return figure_map, figureTS
 
@@ -188,8 +192,7 @@ def update_upper_figures(clickData):
     [Input('school-dropdown', 'value')]
 )
 def drop_down_callbacks(value):
-    school = (school_abbrev[school_abbrev['Abbrev'] == value]
-              ['School'].values[0])
+    school = school_abbrev.query(f'Abbrev == "{value}"')['School'].values[0]
     clickData = {'points': [{'y': school}]}
     df = get_donations_df(db_path)
     school_idx = df[df['School'] == school].index[0]
@@ -207,8 +210,7 @@ def update_dropdown(selectedData):
     school = ''.join(
         school_re.findall(json.dumps(selectedData['points'][0]['y']))
     )
-    value = (school_abbrev[school_abbrev['School'] == school]['Abbrev']
-             .values[0])
+    value = school_abbrev.query(f'School == "{school}"')['Abbrev'].values[0]
 
     return value
 

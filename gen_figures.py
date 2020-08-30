@@ -50,8 +50,11 @@ def get_donation_bar(data, highlighted_bar=0):
     return fig
 
 
-def get_donationTS_scatter(data, school):
+def get_donationTS_scatter(data, school, school_abbrev):
     """Return scatter plot of the donation time series."""
+    if ('-' in school_abbrev) and (school_abbrev != 'rose-hulman'):
+        school_abbrev = '.'.join(school_abbrev.split('-'))
+
     fig = px.scatter(
         data,
         x='Date',
@@ -91,7 +94,7 @@ def get_donationTS_scatter(data, school):
                         method="update"
                     )
                 ]),
-                x=0.0,
+                x=0.15,
                 xanchor="left",
                 yanchor="middle",
                 y=1.1,
@@ -99,25 +102,46 @@ def get_donationTS_scatter(data, school):
             ),
         ]
     )
+    fig.add_layout_image(
+        dict(
+            source=f"http://logo.clearbit.com/{school_abbrev}.edu",
+            xref="paper", yref="paper",
+            x=0,
+            y=1.1,
+            sizex=0.18,
+            sizey=0.18,
+            xanchor="left",
+            yanchor="middle"
+        )
+    )
 
     return fig
 
 
 def get_donation_map(data, school):
     """Return donation map."""
+    if school.endswith('(The)'):
+        school = school.split(' (')[0]
+
+    if school.endswith('The'):
+        school = 'The ' + school.split(',')[0]
+
     fig = px.scatter_mapbox(
         data,
         lat="Latitude",
         lon="Longitude",
         color="Score",
-        size="Amount",
+        size=abs(data["Amount"]),
         custom_data=['Donor Country', 'Date', 'Amount', 'Score'],
         color_continuous_scale=px.colors.sequential.Bluered[::-1],
         opacity=0.5,
         size_max=15,
         zoom=0,
+        title=f'Temporal and geographical donation trends of <br>{school}'
     )
-    fig.update_layout(mapbox_style="open-street-map")
+    fig.update_layout(
+        {'coloraxis': {'cmin': 0.0, 'cmax': 10.0},
+         'mapbox_style': 'open-street-map'})
     fig.update_traces(
         hovertemplate=("Donor Country: %{customdata[0]}<br>"
                        "Date: %{customdata[1]|%Y-%m-%d}<br>"
