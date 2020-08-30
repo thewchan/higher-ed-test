@@ -15,9 +15,36 @@ def get_donation_bar(data, highlighted_bar=0):
     fig.update_layout(clickmode='event+select')
     fig.update_traces({
         'selected': {'marker': {'opacity': 1.0}},
-        'unselected': {'marker': {'opacity': 0.5}},
+        'unselected': {'marker': {'opacity': 0.3}},
         'selectedpoints': [highlighted_bar]
     }
+    )
+    fig.update_layout(
+        updatemenus=[
+            dict(
+                type="buttons",
+                direction="right",
+                buttons=list([
+                    dict(
+                        args=[{"visible": [True, True]},
+                              {'xaxis': {'type': 'log'}}],
+                        label="Log scale",
+                        method="update"
+                    ),
+                    dict(
+                        args=[{'visible': [True, False]},
+                              {'xaxis': {'type': 'linear'}}],
+                        label="Linear Scale",
+                        method="update"
+                    )
+                ]),
+                x=1.0,
+                xanchor="right",
+                yanchor="top",
+                bgcolor='rgba(229, 236, 246, 0.5)',
+                active=1,
+            ),
+        ]
     )
 
     return fig
@@ -44,6 +71,33 @@ def get_donationTS_scatter(data, school):
                        "Amount: %{y:$,}<br>"
                        "Donor Country: %{customdata[0]}<br>"
                        "Donor: %{customdata[1]}")
+    )
+    fig.update_layout(
+        updatemenus=[
+            dict(
+                type="buttons",
+                direction="right",
+                buttons=list([
+                    dict(
+                        args=[{"visible": [True, True]},
+                              {'yaxis': {'type': 'log'}}],
+                        label="Log scale",
+                        method="update"
+                    ),
+                    dict(
+                        args=[{'visible': [True, False]},
+                              {'yaxis': {'type': 'linear'}}],
+                        label="Linear Scale",
+                        method="update"
+                    )
+                ]),
+                x=0.0,
+                xanchor="left",
+                yanchor="middle",
+                y=1.1,
+                active=1
+            ),
+        ]
     )
 
     return fig

@@ -75,7 +75,7 @@ def get_donationsTS_df(db_path, school):
         DonationData.Country_of_Giftor.label('Donor Country'),
         DonationData.Giftor_Name.label('Donor'),
     ).filter(DonationData.Institution_name == school)
-     .order_by('Date')
+     .order_by('School')
     )
 
     df = pd.read_sql(

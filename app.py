@@ -46,7 +46,7 @@ app.layout = html.Div(
                             dbc.Col(
                                 dbc.NavbarBrand(
                                     'Foreign Donations to US Universities',
-                                    className='ml-2'
+                                    className='display-3'
                                 )
                             ),
                             align='center',
@@ -91,6 +91,30 @@ app.layout = html.Div(
                     ),
                 ],
                 className='navbar navbar-expand-lg navbar-light bg-light',
+            ),
+        ),
+        html.Div(
+            dbc.Jumbotron(
+                dcc.Markdown(
+                    """
+                    This is a visualization tool for the disclosed foreign
+                    donations received by US universities. Between 2012 and
+                    2019. Choose or type a school name from the drop-down menu
+                    see see donation received trends and sources. "Score" on
+                    the map refers to the [Democracy Index]
+                    (https://www.eiu.com/topic/democracy-index) as published
+                    by [The Economist](https://www.economist.com/) in 2019. You
+                    may also select a school from the total received foreign
+                    donations by school bar chart at the bottom
+                    (drag to zoom.). You may also isolate donations from a
+                    particular country by double-clicking on the country at
+                    the legend of the donation trend graph. The source of the
+                    donation data is from the
+                    [US Department of Education](https://catalog.data.gov/dataset/foreign-gifts-and-contracts-report-2011).
+                    """,
+                    # className='lead'
+                ),
+                className='jumbotron'
             ),
         ),
         html.Div(
